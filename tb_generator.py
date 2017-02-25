@@ -20,4 +20,3 @@ if __name__ == "__main__":
             ab = ieee754(a.float * b.float)
 
             f.write(a.bin + "_" + b.bin + "_" + ab.bin + "\n")
-

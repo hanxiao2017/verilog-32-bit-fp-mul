@@ -65,15 +65,20 @@ module fp_mul(input  wire clk,
 				end	
 
 			STEP_2: begin
-				// sign is xor of signs
-				s = a[`SIGN] ^ b[`SIGN];
+				// if either mantissa is 0, result is 0 
+				if(!a[`M] | !b[`M]) begin 
+					s = 0; e = 0; m = 0;
+				end else begin
+					// sign is xor of signs
+					s = a[`SIGN] ^ b[`SIGN];
 
-				// mantissa is upper 22-bits of product w/ nearest-even rounding
-				m = product[46:24] + (product[`G] & (product[`R] | S));
+					// mantissa is upper 22-bits of product w/ nearest-even rounding
+					m = product[46:24] + (product[`G] & (product[`R] | S));
 
-				// exponent is sum of a and b's exponents, minus the bias 
-				// if the mantissa was shifted, increment the exponent to balance it
-				e = a[`EXP] + b[`EXP] - `BIAS + normalized;
+					// exponent is sum of a and b's exponents, minus the bias 
+					// if the mantissa was shifted, increment the exponent to balance it
+					e = a[`EXP] + b[`EXP] - `BIAS + normalized;
+				end 
 
 				next_state = STEP_1;
 				end
