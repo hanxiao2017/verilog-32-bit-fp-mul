@@ -4,61 +4,54 @@
 
 module main_tb;
 
-logic clk;
+	logic clk = 0;
 
-logic[31:0] a;
-logic[31:0] b;
-logic[31:0] y;
-logic[31:0] exp_y;
+	logic[31:0] a;
+	logic[31:0] b;
+	logic[31:0] y;
+	logic[31:0] exp_y;
 
-logic[95:0] testVector[`N_TESTS:0];
+	logic[95:0] testVector[`N_TESTS:0];
 
-int i = 0, errors = 0, one_bit_rounding_errors = 0;
+	int test_n = 0, cycle_n = 0, errors = 0;
 
-fp_mul DUT(a, b, y);
+	fp_mul DUT(clk, a, b, y);
 
+	initial  begin 
+		$readmemb("TestVector", testVector);
+	end 
 
-initial  begin 
-	$readmemb("TestVector", testVector);
-	i = 0; 
-end 
+	always @(posedge clk) begin
 
+		// every two cycles...
+		if(cycle_n % 2 == 0) begin
 
-always @(posedge clk) begin
-	{a, b, exp_y} = testVector[i];
-end
+			// check if result matches excepted result
+			$display("Test:%d", test_n);
+			$display("Expected = %b", exp_y);
+			$display("Computed = %b", y);
 
+			if(y !== exp_y)	begin 
+				$display("Diff.    = %b", y^exp_y);
+				errors++;
+			end
+			
+			if (test_n >= `N_TESTS) begin
+				$display("Completed %d tests, %d passes and %d fails.", 
+						test_n, test_n-errors, errors);		
+			end
 
-always @(negedge clk) begin
+			// then load next test values
+			{a, b, exp_y} = testVector[test_n];
+			test_n++;
+		end 
 
-	if(y !== exp_y)	begin 
-		errors++;
-		$display("Test:%d", i);
-		$display("Expected = %b", exp_y);
-		$display("Computed = %b", y);
-		$display("Diff.    = %b", y^exp_y);
+		cycle_n++;
 	end
 
-
-	if(y + 1 == exp_y | y - 1 == exp_y) begin 
-		one_bit_rounding_errors++;  
+	always begin
+		clk = !clk; #5;
 	end
-
-
- 	if (i >= `N_TESTS - 1) begin
-		$display("Completed %d tests, %d passes and %d fails.", i, i-errors, errors);		
-		$display("Of the fails, %d had a LSB off by one", one_bit_rounding_errors);
-	end
-
-
-	i++;
-end
-
-
-always begin
-	clk <= 1; #5;
-	clk <= 0; #5;
-end
 
 
 endmodule 

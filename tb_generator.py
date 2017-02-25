@@ -3,14 +3,21 @@ import bitstring, random
 spread = 10000000
 n = 100000
 
-def ieee754(float):
-    b = bitstring.pack('>f', float)
-    sbit, wbits, pbits = b[:1], b[1:12], b[12:]
-    return sbit.bin + wbits.bin + pbits.bin
+def ieee754(flt):
+    b = bitstring.BitArray(float=flt, length=32)
+    return b
 
 if __name__ == "__main__":
-    for i in range(n):
-        a = random.uniform(-spread, spread)
-        b = random.uniform(-spread, spread)
 
-        print(ieee754(a) + "_" + ieee754(b) + "_" + ieee754(a*b))
+    with open("TestVector", "w") as f:
+
+        for i in range(n):
+            a = ieee754(random.uniform(-spread, spread))
+            b = ieee754(random.uniform(-spread, spread))
+
+            # calculate desired product based on 32-bit ieee 754 
+            # representation of the floating point of each operand
+            ab = ieee754(a.float * b.float)
+
+            f.write(a.bin + "_" + b.bin + "_" + ab.bin + "\n")
+
